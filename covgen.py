@@ -3,12 +3,6 @@ import ast
 import random 
 from predicates import *
 
-def get_arguments(args):
-    arguments = []
-    for arg in args:
-        arguments.append(arg.arg)
-    return arguments
-
 def tune_parameters(left, right, f, k):
     while not f(left.get_value(), right.get_value(), k):
         if left.get_type() == "Var":
@@ -17,37 +11,53 @@ def tune_parameters(left, right, f, k):
             right.set_value(random.randint(-100,100))
     return left, right
 
+def get_branch(body, parents = []):
+    branches = []
+    i = 1
+    for line in body:
+        if isinstance(line, ast.If):
+            parents.append((i,1))
+            branches.append([x for x in parents])
+            more = get_branch(line.body, [x for x in parents])
+            branches += more
+            parents.pop()
+
+            if line.orelse:
+                parents.append((i,2))
+                more = get_branch(line.orelse, [x for x in parents])
+                branches += more
+                parents.pop()
+            i+=1
+    return branches
+
 
 if __name__ == '__main__':
 
     k = 1 # for fitness function
+    d = {ast.Gt : greater_than, ast.GtE : greater_than_equal, ast.Lt : less_than, ast.LtE : less_than_equal,
+    ast.Eq : equal, ast.NotEq: not_equal}
 
     tree = astor.parse_file("target.py")
     print(astor.dump_tree(tree))
 
-    arguments = get_arguments(tree.body[1].args.args)
-    print(arguments)
+    functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
+    for function in functionDefs:
+        arguments = [x.arg for x in function.args.args]
 
-    treeBody = tree.body[1].body
+        branches = get_branch(function.body)
+        print(branches)
 
-    d = {ast.Gt : greater_than, ast.GtE : greater_than_equal, ast.Lt : less_than, ast.LtE : less_than_equal,
-    ast.Eq : equal, ast.NotEq: not_equal}
+        # for line in function.body:
+        #     if isinstance(line, ast.If):
+        #         comparator = line.test.ops[0]
+        #         left = predicateElement(line.test.left)
+        #         right = predicateElement(line.test.comparators[0])
 
-    for line in treeBody:
-        if isinstance(line, ast.If):
-            comparator = line.test.ops[0]
-            left = predicateElement(line.test.left)
-            right = predicateElement(line.test.comparators[0])
+        #         left, right = tune_parameters(left, right, d[type(comparator)], k)
+                
+        #         print(left.get_value(), right.get_value())
 
-            left, right = tune_parameters(left, right, d[type(comparator)], k)
-            
-            print(left.get_value(), right.get_value())
 
-    #print(ast.body[1].args.args[0].arg)
-    #print(isinstance([0], ast.If))
-
-    #_ast.body[0].value.args[0].s = "arrrgh!"
-    #exec(astor.to_source(_ast))
 
 # Module(
 #     body=[Import(names=[alias(name='math', asname=None)]),

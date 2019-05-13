@@ -1,23 +1,22 @@
 import math
 
-def getAbsoluteDifference(a,b):
+def func(a,b):
 	a-=1
 	if a>b:
-		return a-b
+		if a>15:
+			a = a-b
+			if a>30:
+				return b
+			else:
+				if a>40:
+					return b-a
 
-	if a>=b:
-		return a-b
+				if a>50:
+					return 60
 
 	if a<51:
 		return a-b
 
-	if 89<=b:
-		return a-b
-
-	if a==b:
-		return a-b
-
-	if a!=b:
-		return a-b
-
 	return b-a
+
+
