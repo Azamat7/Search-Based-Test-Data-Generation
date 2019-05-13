@@ -1,6 +1,7 @@
 import astor
 import ast
 import random 
+from predicates import *
 
 def get_arguments(args):
     arguments = []
@@ -8,11 +9,13 @@ def get_arguments(args):
         arguments.append(arg.arg)
     return arguments
 
-def greater_than(a, b, k):
-    f = b - a + k 
-    if f <= 0:
-        return True
-    return False
+def tune_parameters(left, right, f, k):
+    while not f(left.get_value(), right.get_value(), k):
+        if left.get_type() == "Var":
+            left.set_value(random.randint(-100,100))
+        if right.get_type() == "Var":
+            right.set_value(random.randint(-100,100))
+    return left, right
 
 
 if __name__ == '__main__':
@@ -20,35 +23,25 @@ if __name__ == '__main__':
     k = 1 # for fitness function
 
     tree = astor.parse_file("target.py")
-    
+    print(astor.dump_tree(tree))
+
     arguments = get_arguments(tree.body[1].args.args)
     print(arguments)
 
     treeBody = tree.body[1].body
 
+    d = {ast.Gt : greater_than, ast.GtE : greater_than_equal, ast.Lt : less_than, ast.LtE : less_than_equal,
+    ast.Eq : equal, ast.NotEq: not_equal}
 
-    
     for line in treeBody:
         if isinstance(line, ast.If):
             comparator = line.test.ops[0]
+            left = predicateElement(line.test.left)
+            right = predicateElement(line.test.comparators[0])
 
-            # greate than 
-            if isinstance(comparator, ast.Gt):
-                left = line.test.left.id
-                right = line.test.comparators[0].id
-
-                d = dict()
-                d[left] = 0
-                d[right] = 0
-
-                f = greater_than
-
-                while not f(d[left], d[right], k):
-                    d[left] = random.randint(-100,100)
-                    d[right] = random.randint(-100,100)
-
-                print(d[left], d[right])
-
+            left, right = tune_parameters(left, right, d[type(comparator)], k)
+            
+            print(left.get_value(), right.get_value())
 
     #print(ast.body[1].args.args[0].arg)
     #print(isinstance([0], ast.If))
