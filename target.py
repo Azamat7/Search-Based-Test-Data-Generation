@@ -5,7 +5,7 @@ def func(a,b):
 	if a>b:
 		if a>15:
 			a = a-b
-			if a>30:
+			if a==30:
 				return b
 			else:
 				if a>40:
