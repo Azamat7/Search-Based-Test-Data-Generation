@@ -35,7 +35,7 @@ def get_branches(body, parents = []):
 def get_fitness(params, body, branch, d, applvl):
     preds = {ast.Gt : greater_than, ast.GtE : greater_than_equal, ast.Lt : less_than, ast.LtE : less_than_equal,
     ast.Eq : equal, ast.NotEq: not_equal}
-    mirror = {ast.Gt : ast.Lt, ast.Lt : ast.Gt, ast.GtE : ast.LtE, ast.LtE : ast.GtE, ast.Eq : ast.NotEq, 
+    mirror = {ast.Gt : ast.LtE, ast.Lt : ast.GtE, ast.GtE : ast.Lt, ast.LtE : ast.Gt, ast.Eq : ast.NotEq, 
     ast.NotEq : ast.Eq}
     k = 1
 
@@ -83,43 +83,31 @@ def get_fitness(params, body, branch, d, applvl):
 def eval_line(line, d, params):
 
     if isinstance(line, ast.AugAssign):
+        target = line.target.id
+        num = predicateElement(line.value, d)
         if isinstance(line.op, ast.Add):
-            target = line.target.id
-            num = predicateElement(line.value, d)
             d[target] = d[target] + num.get_value()
         elif isinstance(line.op, ast.Sub):
-            target = line.target.id
-            num = predicateElement(line.value, d)
             d[target] = d[target] - num.get_value()
         elif isinstance(line.op, ast.Mult):
-            target = line.target.id
-            num = predicateElement(line.value, d)
             d[target] = d[target] * num.get_value()
         elif isinstance(line.op, ast.Div):
-            target = line.target.id
-            num = predicateElement(line.value, d)
             d[target] = d[target] / num.get_value()
     elif isinstance(line, ast.Assign):
-        if isinstance(line.value.op, ast.Add):
-            target = line.targets[0].id
+        target = line.targets[0].id
+        if isinstance(line.value, ast.BinOp):
             left = predicateElement(line.value.left,d)
             right = predicateElement(line.value.right,d)
-            d[target] = left.get_value() + right.get_value()
-        elif isinstance(line.value.op, ast.Sub):
-            target = line.targets[0].id
-            left = predicateElement(line.value.left,d)
-            right = predicateElement(line.value.right,d)
-            d[target] = left.get_value() - right.get_value()
-        elif isinstance(line.value.op, ast.Mult):
-            target = line.targets[0].id
-            left = predicateElement(line.value.left,d)
-            right = predicateElement(line.value.right,d)
-            d[target] = left.get_value() * right.get_value()
-        elif isinstance(line.value.op, ast.Div):
-            target = line.targets[0].id
-            left = predicateElement(line.value.left,d)
-            right = predicateElement(line.value.right,d)
-            d[target] = left.get_value() / right.get_value()
+            if isinstance(line.value.op, ast.Add):
+                d[target] = left.get_value() + right.get_value()
+            elif isinstance(line.value.op, ast.Sub):
+                d[target] = left.get_value() - right.get_value()
+            elif isinstance(line.value.op, ast.Mult):
+                d[target] = left.get_value() * right.get_value()
+            elif isinstance(line.value.op, ast.Div):
+                d[target] = left.get_value() / right.get_value()
+        elif isinstance(line.value, ast.Num):
+            d[target] = line.value.n
 
     return d
 
@@ -135,7 +123,7 @@ def format_inputs(params):
 if __name__ == '__main__':
 
     tree = astor.parse_file("target.py")
-    #print(astor.dump_tree(tree))
+    print(astor.dump_tree(tree))
 
     functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
     for function in functionDefs:

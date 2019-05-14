@@ -56,6 +56,6 @@ def not_equal(a, b, k):
     f = -abs(a-b)
     if f < 0:
         return 0
-    return 
+    return f
 
 

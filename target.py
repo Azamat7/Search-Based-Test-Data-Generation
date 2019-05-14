@@ -6,7 +6,7 @@ def func(a,b,c):
 		if a<b:
 			return a
 
-	a /= 1
+	b = 50
 	if a>b:
 		if a>15:
 			a = a+b
