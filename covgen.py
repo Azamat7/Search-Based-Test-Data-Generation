@@ -80,35 +80,35 @@ def get_fitness(params, body, branch, d, applvl):
         else:
             return fitness
 
-def eval_line(line, d, params):
+def evaluate(left, right, op):
+    if isinstance(op, ast.Add):
+        return left + right
+    elif isinstance(op, ast.Sub):
+        return left - right
+    elif isinstance(op, ast.Mult):
+        return left * right
+    elif isinstance(op, ast.Div):
+        return left / right
+    elif isinstance(op, ast.Pow):
+        return left ** right
+    elif isinstance(op, ast.FloorDiv):
+        return left // right
+    elif isinstance(op, ast.Mod):
+        return left % right
 
+def eval_line(line, d, params):
     if isinstance(line, ast.AugAssign):
         target = line.target.id
         num = predicateElement(line.value, d)
-        if isinstance(line.op, ast.Add):
-            d[target] = d[target] + num.get_value()
-        elif isinstance(line.op, ast.Sub):
-            d[target] = d[target] - num.get_value()
-        elif isinstance(line.op, ast.Mult):
-            d[target] = d[target] * num.get_value()
-        elif isinstance(line.op, ast.Div):
-            d[target] = d[target] / num.get_value()
+        d[target] = evaluate(d[target], num.get_value, line.op)
     elif isinstance(line, ast.Assign):
         target = line.targets[0].id
         if isinstance(line.value, ast.BinOp):
             left = predicateElement(line.value.left,d)
             right = predicateElement(line.value.right,d)
-            if isinstance(line.value.op, ast.Add):
-                d[target] = left.get_value() + right.get_value()
-            elif isinstance(line.value.op, ast.Sub):
-                d[target] = left.get_value() - right.get_value()
-            elif isinstance(line.value.op, ast.Mult):
-                d[target] = left.get_value() * right.get_value()
-            elif isinstance(line.value.op, ast.Div):
-                d[target] = left.get_value() / right.get_value()
+            d[target] = evaluate(left.get_value(), right.get_value(), line.value.op)
         elif isinstance(line.value, ast.Num):
             d[target] = line.value.n
-
     return d
 
 def format_inputs(params):
