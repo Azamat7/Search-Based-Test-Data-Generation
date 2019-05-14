@@ -1,10 +1,11 @@
+import sys
 import random 
 import time
 import astor
 import ast
 from predicates import *
 
-
+# picks random integers 
 def tune_parameters(left, right, f, k):
     while not f(left.get_value(), right.get_value(), k):
         if left.get_type() == "Var":
@@ -13,6 +14,9 @@ def tune_parameters(left, right, f, k):
             right.set_value(random.randint(-100,100))
     return left, right
 
+# return list of branches that we need to cover
+# [(1,1)] -> first if statement
+# [(1,2), (1,1)] -> first if statement, in the else clause of the first if statement
 def get_branches(body, parents = []):
     branches = []
     i = 1
@@ -32,6 +36,7 @@ def get_branches(body, parents = []):
             i+=1
     return branches
 
+# calculates the fitness function for the given set of parameters
 def get_fitness(params, body, branch, d, applvl):
     preds = {ast.Gt : greater_than, ast.GtE : greater_than_equal, ast.Lt : less_than, ast.LtE : less_than_equal,
     ast.Eq : equal, ast.NotEq: not_equal}
@@ -54,7 +59,7 @@ def get_fitness(params, body, branch, d, applvl):
             if y==2:
                 temp = line.orelse
             i+=1
-        else:
+        else: 
             d = eval_line(line, d, params)
 
     comparator = line.test.ops[0]
@@ -120,6 +125,7 @@ def format_inputs(params):
         args += ", "
     return args[:-2]
 
+# get inputs that take the branches
 def get_true_inputs(branches, arguments):
     inputs = []
     for branch in branches:
@@ -144,6 +150,7 @@ def get_true_inputs(branches, arguments):
         inputs.append(params)
     return inputs
 
+# get inputs that do not enter the branches
 def get_false_inputs(branches, arguments):
     finputs = []
     for branch in branches:
@@ -171,9 +178,10 @@ def get_false_inputs(branches, arguments):
     return finputs
 
 if __name__ == '__main__':
+    target = sys.argv[1]
 
-    tree = astor.parse_file("target.py")
-    print(astor.dump_tree(tree))
+    tree = astor.parse_file(target)
+    #print(astor.dump_tree(tree))
 
     functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
     print("Search Started ...")
