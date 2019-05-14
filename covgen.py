@@ -1,19 +1,9 @@
+import random 
+import time
 import astor
 import ast
-import random 
 from predicates import *
-import sys
-from io import StringIO
-import contextlib
 
-@contextlib.contextmanager
-def stdoutIO(stdout=None):
-    old = sys.stdout
-    if stdout is None:
-        stdout = StringIO()
-    sys.stdout = stdout
-    yield stdout
-    sys.stdout = old
 
 def tune_parameters(left, right, f, k):
     while not f(left.get_value(), right.get_value(), k):
@@ -134,6 +124,8 @@ def eval_line(line, d, params):
     return d
 
 def format_inputs(params):
+    if not params:
+        return "-"
     args = ""
     for a in params:
         args += str(a)
@@ -158,12 +150,21 @@ if __name__ == '__main__':
             applvl = len(branch)-1
             params = [0]*len(arguments)
             fitness_result = applvl+1
+            
+            ticks = time.time()
+            unreachable = 0
             while fitness_result != 0:
+                if (time.time()-ticks)>1:
+                    unreachable = 1
+                    break
                 params = [random.randint(-100,100) for _ in range(len(params))]
                 d = dict()
                 for (i,x) in enumerate(arguments):
                     d[x] = params[i]
                 fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
+            
+            if unreachable:
+                inputs.append(None)
             inputs.append(params)
 
         #print(inputs)
@@ -175,12 +176,21 @@ if __name__ == '__main__':
             applvl = len(branch)-1
             params = [0]*len(arguments)
             fitness_result = applvl+1
+
+            ticks = time.time()
+            unreachable = 0
             while fitness_result != 0:
+                if (time.time()-ticks)>1:
+                    unreachable = 1
+                    break
                 params = [random.randint(-100,100) for _ in range(len(params))]
                 d = dict()
                 for (i,x) in enumerate(arguments):
                     d[x] = params[i]
                 fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
+
+            if unreachable:
+                finputs.append(None)
             finputs.append(params)
         #print(finputs)
 

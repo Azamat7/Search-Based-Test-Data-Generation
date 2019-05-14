@@ -1,6 +1,11 @@
 import math
 
 def func(a,b,c):
+
+	if a>b:
+		if a<b:
+			return a
+
 	a /= 1
 	if a>b:
 		if a>15:
