@@ -120,66 +120,72 @@ def format_inputs(params):
         args += ", "
     return args[:-2]
 
+def get_true_inputs(branches, arguments):
+    inputs = []
+    for branch in branches:
+        applvl = len(branch)-1
+        params = [0]*len(arguments)
+        fitness_result = applvl+1
+        
+        ticks = time.time()
+        unreachable = 0
+        while fitness_result != 0:
+            if (time.time()-ticks)>1:
+                unreachable = 1
+                break
+            params = [random.randint(-100,100) for _ in range(len(params))]
+            d = dict()
+            for (i,x) in enumerate(arguments):
+                d[x] = params[i]
+            fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
+        
+        if unreachable:
+            inputs.append(None)
+        inputs.append(params)
+    return inputs
+
+def get_false_inputs(branches, arguments):
+    finputs = []
+    for branch in branches:
+        x,y = branch[-1]
+        branch[-1] = (x,2)
+        applvl = len(branch)-1
+        params = [0]*len(arguments)
+        fitness_result = applvl+1
+
+        ticks = time.time()
+        unreachable = 0
+        while fitness_result != 0:
+            if (time.time()-ticks)>1:
+                unreachable = 1
+                break
+            params = [random.randint(-100,100) for _ in range(len(params))]
+            d = dict()
+            for (i,x) in enumerate(arguments):
+                d[x] = params[i]
+            fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
+
+        if unreachable:
+            finputs.append(None)
+        finputs.append(params)
+    return finputs
+
 if __name__ == '__main__':
 
     tree = astor.parse_file("target.py")
-    print(astor.dump_tree(tree))
+    #print(astor.dump_tree(tree))
 
     functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
+    print("Search Started ...")
     for function in functionDefs:
+        print("\nFunction:",function.name)
         arguments = [x.arg for x in function.args.args]
 
         branches = get_branches(function.body)
         #print(branches)
-        
-        inputs = []
-        print("Search Started ... ")
-        for branch in branches:
-            applvl = len(branch)-1
-            params = [0]*len(arguments)
-            fitness_result = applvl+1
-            
-            ticks = time.time()
-            unreachable = 0
-            while fitness_result != 0:
-                if (time.time()-ticks)>1:
-                    unreachable = 1
-                    break
-                params = [random.randint(-100,100) for _ in range(len(params))]
-                d = dict()
-                for (i,x) in enumerate(arguments):
-                    d[x] = params[i]
-                fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
-            
-            if unreachable:
-                inputs.append(None)
-            inputs.append(params)
-
+        inputs = get_true_inputs(branches, arguments)
         #print(inputs)
-
-        finputs = []
-        for branch in branches:
-            x,y = branch[-1]
-            branch[-1] = (x,2)
-            applvl = len(branch)-1
-            params = [0]*len(arguments)
-            fitness_result = applvl+1
-
-            ticks = time.time()
-            unreachable = 0
-            while fitness_result != 0:
-                if (time.time()-ticks)>1:
-                    unreachable = 1
-                    break
-                params = [random.randint(-100,100) for _ in range(len(params))]
-                d = dict()
-                for (i,x) in enumerate(arguments):
-                    d[x] = params[i]
-                fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
-
-            if unreachable:
-                finputs.append(None)
-            finputs.append(params)
+        finputs = get_false_inputs(branches, arguments)
         #print(finputs)
 
         for i in range(len(branches)):
