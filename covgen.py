@@ -173,7 +173,7 @@ def get_false_inputs(branches, arguments):
 if __name__ == '__main__':
 
     tree = astor.parse_file("target.py")
-    #print(astor.dump_tree(tree))
+    print(astor.dump_tree(tree))
 
     functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
     print("Search Started ...")
