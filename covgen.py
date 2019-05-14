@@ -75,16 +75,20 @@ def get_fitness(params, body, branch, d, applvl):
     left = predicateElement(line.test.left, d)
     right = predicateElement(line.test.comparators[0], d)
 
-    fitness = applvl + (1 - 1.001 ** bdist(left.get_value(), right.get_value(), k))
+    b = (1 - 1.001 ** bdist(left.get_value(), right.get_value(), k))
+    fitness = applvl + b
 
     if fitness == 0:
         return 0
     elif len(branch)==1:
         return fitness
     else:
-        if y==2:
-            return get_fitness(params, [x for x in line.orelse], branch[1:], d, applvl-1)
-        return get_fitness(params, [x for x in line.body], branch[1:], d, applvl-1)
+        if b==0:
+            if y==2:
+                return get_fitness(params, [x for x in line.orelse], branch[1:], d, applvl-1)
+            return get_fitness(params, [x for x in line.body], branch[1:], d, applvl-1)
+        else:
+            return fitness
 
 def eval_line(line, d, params):
 
@@ -155,19 +159,24 @@ if __name__ == '__main__':
                     d[x] = params[i]
                 fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
             inputs.append(params)
-            print(branch, params)
 
         print(inputs)
 
-        # for line in function.body:
-        #     if isinstance(line, ast.If):
-        #         comparator = line.test.ops[0]
-        #         left = predicateElement(line.test.left)
-        #         right = predicateElement(line.test.comparators[0])
-
-        #         left, right = tune_parameters(left, right, d[type(comparator)], k)
-                
-        #         print(left.get_value(), right.get_value())
+        finputs = []
+        for branch in branches:
+            x,y = branch[-1]
+            branch[-1] = (x,2)
+            applvl = len(branch)-1
+            params = [0]*len(arguments)
+            fitness_result = applvl+1
+            while fitness_result != 0:
+                params = [random.randint(-100,100) for _ in range(len(params))]
+                d = dict()
+                for (i,x) in enumerate(arguments):
+                    d[x] = params[i]
+                fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
+            finputs.append(params)
+        print(finputs)
 
 
 
