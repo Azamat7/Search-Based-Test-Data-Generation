@@ -2,6 +2,18 @@ import astor
 import ast
 import random 
 from predicates import *
+import sys
+from io import StringIO
+import contextlib
+
+@contextlib.contextmanager
+def stdoutIO(stdout=None):
+    old = sys.stdout
+    if stdout is None:
+        stdout = StringIO()
+    sys.stdout = stdout
+    yield stdout
+    sys.stdout = old
 
 def tune_parameters(left, right, f, k):
     while not f(left.get_value(), right.get_value(), k):
@@ -43,6 +55,8 @@ def get_fitness(params, body, branch, d, applvl):
 
     if isinstance(line, ast.If):
         i+=1
+    else:
+        d = eval_line(line, d, params)
 
     while i!=x:
         line = body.pop(0)
@@ -73,6 +87,46 @@ def get_fitness(params, body, branch, d, applvl):
         return get_fitness(params, [x for x in line.body], branch[1:], d, applvl-1)
 
 def eval_line(line, d, params):
+
+    if isinstance(line, ast.AugAssign):
+        if isinstance(line.op, ast.Add):
+            target = line.target.id
+            num = predicateElement(line.value, d)
+            d[target] = d[target] + num.get_value()
+        elif isinstance(line.op, ast.Sub):
+            target = line.target.id
+            num = predicateElement(line.value, d)
+            d[target] = d[target] - num.get_value()
+        elif isinstance(line.op, ast.Mult):
+            target = line.target.id
+            num = predicateElement(line.value, d)
+            d[target] = d[target] * num.get_value()
+        elif isinstance(line.op, ast.Div):
+            target = line.target.id
+            num = predicateElement(line.value, d)
+            d[target] = d[target] / num.get_value()
+    elif isinstance(line, ast.Assign):
+        if isinstance(line.value.op, ast.Add):
+            target = line.targets[0].id
+            left = predicateElement(line.value.left,d)
+            right = predicateElement(line.value.right,d)
+            d[target] = left.get_value() + right.get_value()
+        elif isinstance(line.value.op, ast.Sub):
+            target = line.targets[0].id
+            left = predicateElement(line.value.left,d)
+            right = predicateElement(line.value.right,d)
+            d[target] = left.get_value() - right.get_value()
+        elif isinstance(line.value.op, ast.Mult):
+            target = line.targets[0].id
+            left = predicateElement(line.value.left,d)
+            right = predicateElement(line.value.right,d)
+            d[target] = left.get_value() * right.get_value()
+        elif isinstance(line.value.op, ast.Div):
+            target = line.targets[0].id
+            left = predicateElement(line.value.left,d)
+            right = predicateElement(line.value.right,d)
+            d[target] = left.get_value() / right.get_value()
+
     return d
 
 

@@ -1,10 +1,10 @@
 import math
 
 def func(a,b):
-	a-=1
+	a /= 1
 	if a>b:
 		if a>15:
-			a = a-b
+			a = a+b
 			if a==30:
 				return b
 			else:
