@@ -1,11 +1,11 @@
 import math
 
-def func(a,b):
+def func(a,b,c):
 	a /= 1
 	if a>b:
 		if a>15:
 			a = a+b
-			if a==30:
+			if c==30:
 				return b
 			else:
 				if a>40:

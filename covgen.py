@@ -133,18 +133,24 @@ def eval_line(line, d, params):
 
     return d
 
+def format_inputs(params):
+    args = ""
+    for a in params:
+        args += str(a)
+        args += ", "
+    return args[:-2]
 
 if __name__ == '__main__':
 
     tree = astor.parse_file("target.py")
-    print(astor.dump_tree(tree))
+    #print(astor.dump_tree(tree))
 
     functionDefs = [line for line in tree.body if isinstance(line, ast.FunctionDef)]
     for function in functionDefs:
         arguments = [x.arg for x in function.args.args]
 
         branches = get_branches(function.body)
-        print(branches)
+        #print(branches)
         
         inputs = []
         print("Search Started ... ")
@@ -160,7 +166,7 @@ if __name__ == '__main__':
                 fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
             inputs.append(params)
 
-        print(inputs)
+        #print(inputs)
 
         finputs = []
         for branch in branches:
@@ -176,39 +182,9 @@ if __name__ == '__main__':
                     d[x] = params[i]
                 fitness_result = get_fitness(params, [x for x in function.body], branch, d, applvl)
             finputs.append(params)
-        print(finputs)
+        #print(finputs)
 
-
-
-# Module(
-#     body=[Import(names=[alias(name='math', asname=None)]),
-#         FunctionDef(name='getAbsoluteDifference',
-#             args=arguments(
-#                 args=[arg(arg='a', annotation=None), arg(arg='b', annotation=None)],
-#                 vararg=None,
-#                 kwonlyargs=[],
-#                 kw_defaults=[],
-#                 kwarg=None,
-#                 defaults=[]),
-#             body=[AugAssign(target=Name(id='a'), op=Sub, value=Num(n=1)),
-#                 If(test=Compare(left=Name(id='a'), ops=[Gt], comparators=[Name(id='b')]),
-#                     body=[Return(value=BinOp(left=Name(id='a'), op=Sub, right=Name(id='b')))],
-#                     orelse=[]),
-#                 Return(value=BinOp(left=Name(id='b'), op=Sub, right=Name(id='a')))],
-#             decorator_list=[],
-#             returns=None)])
-
-
-
-# import astor
-
-# def hello():
-#     print('hello!')
-#     return
-
-# _ast = astor.code_to_ast(hello)
-# _ast.body[0].value.args[0].s = "arrrgh!"
-# exec(astor.to_source(_ast))
-# hello()
-    
+        for i in range(len(branches)):
+            print("%sT: %s" % (str(i+1),format_inputs(inputs[i])))
+            print("%sF: %s" % (str(i+1),format_inputs(finputs[i])))
 
